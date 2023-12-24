@@ -37,6 +37,12 @@ func (s *Slice[T]) Get(index int) (T, bool) {
 	return s.slice[index], true
 }
 
+// GetUnsafe retrieves an element at a given index without checking for out-of-bounds.
+// This method is unsafe and can Panic if the index is out of bounds.
+func (s *Slice[T]) GetUnsafe(index int) T {
+	return s.slice[index]
+}
+
 // Set updates the element at a given index.
 // If the index is out of bounds, it does nothing and returns false.
 func (s *Slice[T]) Set(index int, value T) bool {
@@ -49,6 +55,15 @@ func (s *Slice[T]) Set(index int, value T) bool {
 
 	s.slice[index] = value
 	return true
+}
+
+// SetUnsafe updates the element at a given index without checking for out-of-bounds.
+// This method is unsafe and can Panic if the index is out of bounds.
+func (s *Slice[T]) SetUnsafe(index int, value T) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.slice[index] = value
 }
 
 // Length returns the current length of the slice.
@@ -69,6 +84,16 @@ func (s *Slice[T]) Remove(index int) bool {
 	s.slice = append(s.slice[:index], s.slice[index+1:]...)
 	atomic.AddInt32(&s.len, -1)
 	return true
+}
+
+// RemoveUnsafe removes the element at a given index without checking for out-of-bounds.
+// This method is unsafe and can Panic if the index is out of bounds.
+func (s *Slice[T]) RemoveUnsafe(index int) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.slice = append(s.slice[:index], s.slice[index+1:]...)
+	atomic.AddInt32(&s.len, -1)
 }
 
 // Range calls a function for each element in the slice.
