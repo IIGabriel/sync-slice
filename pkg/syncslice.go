@@ -80,3 +80,23 @@ func (s *Slice[T]) Range(f func(index int, value T) bool) {
 		}
 	}
 }
+
+// SetSlice replaces the internal slice with the provided slice.
+func (s *Slice[T]) SetSlice(newSlice []T) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.slice = make([]T, len(newSlice))
+	copy(s.slice, newSlice)
+	atomic.StoreInt32(&s.len, int32(len(newSlice)))
+}
+
+// GetSlice returns a copy of the internal slice.
+func (s *Slice[T]) GetSlice() []T {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	copiedSlice := make([]T, len(s.slice))
+	copy(copiedSlice, s.slice)
+	return copiedSlice
+}

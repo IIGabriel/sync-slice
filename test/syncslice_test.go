@@ -142,3 +142,42 @@ func TestConcurrency(t *testing.T) {
 		t.Errorf("Expected length 1000, got %d", s.Length())
 	}
 }
+
+func TestSetSlice(t *testing.T) {
+	s := syncslice.New[int]()
+	s.Append(1)
+	s.Append(2)
+
+	newSlice := []int{3, 4, 5}
+	s.SetSlice(newSlice)
+
+	if s.Length() != 3 {
+		t.Errorf("Expected length 3 after SetSlice, got %d", s.Length())
+	}
+
+	if val, _ := s.Get(0); val != 3 {
+		t.Errorf("Expected first element to be 3 after SetSlice, got %d", val)
+	}
+}
+
+func TestGetSlice(t *testing.T) {
+	s := syncslice.New[int]()
+	s.Append(1)
+	s.Append(2)
+
+	sliceCopy := s.GetSlice()
+
+	if len(sliceCopy) != 2 {
+		t.Errorf("Expected copied slice length 2, got %d", len(sliceCopy))
+	}
+
+	if sliceCopy[0] != 1 || sliceCopy[1] != 2 {
+		t.Errorf("Expected copied slice to be [1, 2], got %v", sliceCopy)
+	}
+
+	// Modifying the original slice to check if the copied slice remains unchanged
+	s.Append(3)
+	if len(sliceCopy) != 2 {
+		t.Errorf("Expected copied slice length to remain 2 after modifying original, got %d", len(sliceCopy))
+	}
+}
