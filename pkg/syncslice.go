@@ -125,3 +125,26 @@ func (s *Slice[T]) GetSlice() []T {
 	copy(copiedSlice, s.slice)
 	return copiedSlice
 }
+
+// ManipulateAtIndex applies a manipulation function to the element at the specified index.
+// It returns true if the index is within bounds and the operation is successful.
+func (s *Slice[T]) ManipulateAtIndex(index int, manipulateFunc func(*T)) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if index < 0 || index >= int(s.len) {
+		return false
+	}
+	manipulateFunc(&s.slice[index])
+
+	return true
+}
+
+// ManipulateAtIndexUnsafe applies a manipulation function to the element at the specified index without bounds checking.
+// This method is unsafe and can panic if the index is out of bounds.
+func (s *Slice[T]) ManipulateAtIndexUnsafe(index int, manipulateFunc func(*T)) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	manipulateFunc(&s.slice[index])
+}

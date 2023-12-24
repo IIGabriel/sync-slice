@@ -181,3 +181,99 @@ func TestGetSlice(t *testing.T) {
 		t.Errorf("Expected copied slice length to remain 2 after modifying original, got %d", len(sliceCopy))
 	}
 }
+
+// TestSetUnsafe tests the SetUnsafe method.
+func TestSetUnsafe(t *testing.T) {
+	s := syncslice.New[int]()
+	s.Append(1)
+
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("Expected panic for out of bounds index")
+		}
+	}()
+	s.SetUnsafe(2, 3) // should panic
+}
+
+// TestRemoveUnsafe tests the RemoveUnsafe method.
+func TestRemoveUnsafe(t *testing.T) {
+	s := syncslice.New[int]()
+	s.Append(1)
+	s.Append(2)
+
+	defer func() {
+		if r := recover(); r != nil {
+			t.Errorf("Did not expect panic for valid index")
+		}
+	}()
+	s.RemoveUnsafe(1)
+
+	if s.Length() != 1 {
+		t.Errorf("Expected length 1 after removal, got %d", s.Length())
+	}
+}
+
+// TestManipulateAtIndex tests the ManipulateAtIndex method.
+func TestManipulateAtIndex(t *testing.T) {
+	s := syncslice.New[int]()
+	s.Append(1)
+	s.Append(2)
+
+	// Teste bem-sucedido de manipulação
+	success := s.ManipulateAtIndex(1, func(val *int) {
+		*val = 5
+	})
+
+	if !success {
+		t.Errorf("Manipulation should have succeeded")
+	}
+
+	if val, _ := s.Get(1); val != 5 {
+		t.Errorf("Expected value 5 at index 1, got %d", val)
+	}
+
+	if s.ManipulateAtIndex(10, func(val *int) {
+		*val = 5
+	}) {
+		t.Errorf("Manipulation should have failed for out of bounds index")
+	}
+}
+
+// TestGetUnsafe tests the GetUnsafe method.
+func TestGetUnsafe(t *testing.T) {
+	s := syncslice.New[int]()
+	s.Append(1)
+	s.Append(2)
+
+	// Teste bem-sucedido de obtenção
+	if val := s.GetUnsafe(1); val != 2 {
+		t.Errorf("Expected value 2 at index 1, got %d", val)
+	}
+
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("Expected panic for out of bounds index")
+		}
+	}()
+	_ = s.GetUnsafe(10) // should panic
+}
+
+// TestManipulateAtIndexUnsafe tests the ManipulateAtIndexUnsafe method.
+func TestManipulateAtIndexUnsafe(t *testing.T) {
+	s := syncslice.New[int]()
+	s.Append(1)
+	s.Append(2)
+
+	defer func() {
+		if r := recover(); r != nil {
+			t.Errorf("Did not expect panic for valid index")
+		}
+	}()
+	s.ManipulateAtIndexUnsafe(1, func(val *int) {
+		*val = 10
+	})
+
+	if val, _ := s.Get(1); val != 10 {
+		t.Errorf("Expected value 10 at index 1, got %d", val)
+	}
+}
